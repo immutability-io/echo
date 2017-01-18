@@ -20,6 +20,7 @@ type (
 		// Possible values:
 		// - "header:<name>"
 		// - "query:<name>"
+		// - "cookie:<name>"
 		KeyLookup string `json:"key_lookup"`
 
 		// AuthScheme to be used in the Authorization header.
@@ -78,9 +79,12 @@ func KeyAuthWithConfig(config KeyAuthConfig) echo.MiddlewareFunc {
 	// Initialize
 	parts := strings.Split(config.KeyLookup, ":")
 	extractor := keyFromHeader(parts[1], config.AuthScheme)
+
 	switch parts[0] {
 	case "query":
 		extractor = keyFromQuery(parts[1])
+	case "cookie":
+		extractor = keyFromCookie(parts[1])
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -129,5 +133,22 @@ func keyFromQuery(param string) keyExtractor {
 			return "", errors.New("Missing key in the query string")
 		}
 		return key, nil
+	}
+}
+
+// keyFromCookie returns a `keyExtractor` that extracts key from a cookie.
+func keyFromCookie(param string) keyExtractor {
+	return func(c echo.Context) (string, error) {
+		cookie, err := c.Cookie(param)
+		if err != nil {
+			return "", err
+		}
+		if cookie == nil {
+			return "", errors.New("Missing cookie")
+		}
+		if cookie.Value == "" {
+			return "", errors.New("Missing key in the cookie")
+		}
+		return cookie.Value, nil
 	}
 }

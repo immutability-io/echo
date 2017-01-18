@@ -56,4 +56,15 @@ func TestKeyAuth(t *testing.T) {
 	q.Add("key", "valid-key")
 	req.URL.RawQuery = q.Encode()
 	assert.NoError(t, h(c))
+
+	// Key from cookie
+	config.KeyLookup = "cookie:token"
+	h = KeyAuthWithConfig(config)(func(c echo.Context) error {
+		return c.String(http.StatusOK, "test")
+	})
+	expiration := time.Now().Add(365 * 24 * time.Hour)
+	cookie := http.Cookie{Name: "token", Value: "valid-key", Expires: expiration}
+	req.AddCookie(cookie)
+	assert.NoError(t, h(c))
+
 }
