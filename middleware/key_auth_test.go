@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"github.com/labstack/echo"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/labstack/echo"
-	"github.com/stretchr/testify/assert"
+	"time"
 )
 
 func TestKeyAuth(t *testing.T) {
@@ -64,7 +64,7 @@ func TestKeyAuth(t *testing.T) {
 	})
 	expiration := time.Now().Add(365 * 24 * time.Hour)
 	cookie := http.Cookie{Name: "token", Value: "valid-key", Expires: expiration}
-	req.AddCookie(cookie)
+	req.AddCookie(&cookie)
 	assert.NoError(t, h(c))
 
 }
